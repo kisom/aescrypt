@@ -1,0 +1,4 @@
+cryptokit/cryptokit
+
+This is a NaCL-like implementation of a cryptographic system using
+FIPS public-key cryptography.
