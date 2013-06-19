@@ -47,6 +47,7 @@ var PRNG = rand.Reader
 type Key []byte
 type nonce []byte
 
+// GenerateKey returns a key suitable for sealing and opening boxes.
 func GenerateKey() (Key, error) {
 	var key Key = make([]byte, KeySize)
 

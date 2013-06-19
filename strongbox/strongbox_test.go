@@ -47,7 +47,7 @@ func TestBoxing(t *testing.T) {
 		if !ok {
 			fmt.Println("Boxing failed: message", i)
 			t.FailNow()
-		} else if len(box) != len(testMessages[i]) + Overhead {
+		} else if len(box) != len(testMessages[i])+Overhead {
 			fmt.Println("The box length is invalid.")
 			t.FailNow()
 		}
