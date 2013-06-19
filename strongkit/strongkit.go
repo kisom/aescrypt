@@ -78,7 +78,8 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	return append(skey, mkey...), true
 }
 
-//
+// GenerateKey generates an appropriate private and public keypair for
+// use in cryptokit.
 func GenerateKey() (PrivateKey, PublicKey, bool) {
 	key, x, y, err := elliptic.GenerateKey(curve, PRNG)
 	if err != nil {
