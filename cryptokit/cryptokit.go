@@ -26,7 +26,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 	"github.com/gokyle/cryptokit/secretbox"
 	"math/big"
 )
@@ -62,7 +61,6 @@ var curve = elliptic.P256()
 func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	x, y := elliptic.Unmarshal(curve, peer)
 	if x == nil {
-		fmt.Println("failed to unmarshal key")
 		return nil, false
 	}
 	x, _ = curve.ScalarMult(x, y, key)
@@ -107,19 +105,16 @@ func Seal(message []byte, peer PublicKey) (box []byte, ok bool) {
 
 	eph_key, eph_peer, ok := GenerateKey()
 	if !ok {
-		fmt.Println("failed to generate ephem key")
 		return
 	}
 
 	skey, ok := ecdh(eph_key, peer)
 	if !ok {
-		fmt.Println("failed to generate shared key")
 		return
 	}
 
 	sbox, ok := secretbox.Seal(message, skey)
 	if !ok {
-		fmt.Println("failed to seal SecretBox")
 		return
 	}
 
@@ -139,14 +134,12 @@ func Open(box []byte, key PrivateKey) (message []byte, ok bool) {
 	}
 
 	if len(box) < publicKeySize+secretbox.Overhead {
-		fmt.Println("box size is invalid")
 		return
 	}
 
 	eph_peer := box[:publicKeySize]
 	shared, ok := ecdh(key, eph_peer)
 	if !ok {
-		fmt.Println("couldn't generate shared key")
 		return
 	}
 
@@ -189,7 +182,6 @@ func sign(message []byte, key PrivateKey, pub PublicKey) (smessage []byte, ok bo
 
 	skey, ok := ecdsa_private(key, pub)
 	if !ok {
-		fmt.Println("failed to generate ecdsa key")
 		return
 	}
 	r, s, err := ecdsa.Sign(PRNG, skey, hash)
@@ -280,7 +272,7 @@ func zeroPad(in []byte, outlen int) (out []byte) {
 	} else if inLen == outlen {
 		return in
 	}
-	start := outlen - inLen - 1
+	start := outlen - inLen
 	out = make([]byte, outlen)
 	copy(out[start:], in)
 	return
