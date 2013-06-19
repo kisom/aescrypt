@@ -46,6 +46,7 @@ var PRNG = rand.Reader
 type Key []byte
 type nonce []byte
 
+// GenerateKey returns a key suitable for sealing and opening boxes.
 func GenerateKey() (Key, error) {
 	var key Key = make([]byte, KeySize)
 
@@ -77,7 +78,7 @@ func encrypt(key []byte, in []byte) (out []byte, err error) {
 	if err != nil {
 		return
 	}
-ctr := cipher.NewCTR(c, out[:aes.BlockSize])
+	ctr := cipher.NewCTR(c, out[:aes.BlockSize])
 	ctr.XORKeyStream(out[aes.BlockSize:], in)
 	return
 }
@@ -116,7 +117,7 @@ func decrypt(key []byte, in []byte) (out []byte, err error) {
 
 // Seal returns an authenticated and encrypted message, and a boolean
 // indicating whether the sealing operation was successful. If it returns
-//true, the message was successfully sealed. The box will be Overhead
+// true, the message was successfully sealed. The box will be Overhead
 // bytes longer than the message.
 func Seal(message []byte, key Key) (box []byte, ok bool) {
 	if !KeyIsSuitable(key) {
