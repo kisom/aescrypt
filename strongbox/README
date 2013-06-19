@@ -1,0 +1,7 @@
+cryptokit/strongbox
+
+This is a NaCL-like implementation of a cryptographic system using
+FIPS-compliant ciphers.
+
+strongbox provides 50-year security using AES-256 in CTR mode with
+HMAC-SHA-256, assuming keys are not compromised.

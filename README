@@ -1,0 +1,12 @@
+cryptokit
+
+CryptoKit aims to provide similar functionality to NaCL[1], while using
+FIPS ciphers. It provides the following packages:
+
+* secretbox: secure and authenticate small messages with 20-year security.
+* strongbox: secure and authenticate small messages with 50-year security.
+
+
+Cipher Selection
+* secretbox: AES-128 in CTR mode with HMAC-SHA-256
+* strongbox: AES-256 in CTR mode with HMAC-SHA-256
