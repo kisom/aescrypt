@@ -6,6 +6,15 @@ FIPS ciphers. It provides the following packages:
 * secretbox: secure and authenticate small messages with 20-year security.
 * strongbox: secure and authenticate small messages with 50-year security.
 
+cryptokit operates on the concept of "boxes", which are encrypted and
+authenticated secure messages. Boxes operate under the following threat model:
+
+* Messages should be confidential, but it is not a concern that Eve can
+  determine the length of the message.
+* The communicating parties have some means of authenticating keys on
+  their own; that is, this package provides no authentication outside
+  of the keys themselves. There is no identity bound to a key.
+
 
 Cipher Selection
 * secretbox: AES-128 in CTR mode with HMAC-SHA-256
