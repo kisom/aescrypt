@@ -19,7 +19,7 @@
 
 	The boxes used in this package are suitable for 50-year security.
 */
-package strongkit
+package stoutbox
 
 import (
 	"crypto/ecdsa"

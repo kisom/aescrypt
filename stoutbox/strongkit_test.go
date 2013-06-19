@@ -1,4 +1,4 @@
-package strongkit
+package stoutbox
 
 import "bytes"
 import "fmt"

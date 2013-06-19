@@ -19,7 +19,7 @@
 
 	The boxes used in this package are suitable for 20-year security.
 */
-package cryptokit
+package box
 
 import (
 	"crypto/ecdsa"

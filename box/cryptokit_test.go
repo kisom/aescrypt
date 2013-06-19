@@ -1,4 +1,4 @@
-package cryptokit
+package box
 
 import "bytes"
 import "fmt"
