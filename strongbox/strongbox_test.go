@@ -24,6 +24,8 @@ var (
 	testBadKey  Key
 )
 
+// TestKeyGeneration generates a pair of keys, verifying that the key
+// generation code works properly.
 func TestKeyGeneration(t *testing.T) {
 	var err error
 	testGoodKey, err = GenerateKey()
@@ -38,17 +40,23 @@ func TestKeyGeneration(t *testing.T) {
 	}
 }
 
+// TestBoxing ensures that sealing a message into a box works properly.
 func TestBoxing(t *testing.T) {
 	for i := 0; i < len(testMessages); i++ {
 		box, ok := Seal([]byte(testMessages[i]), testGoodKey)
 		if !ok {
 			fmt.Println("Boxing failed: message", i)
 			t.FailNow()
+		} else if len(box) != len(testMessages[i]) + Overhead {
+			fmt.Println("The box length is invalid.")
+			t.FailNow()
 		}
 		testBoxes[i] = string(box)
 	}
 }
 
+// TestUnboxing ensures that unsealing (or opening) a box to retrieve
+// a message works properly.
 func TestUnboxing(t *testing.T) {
 	for i := 0; i < len(testMessages); i++ {
 		message, ok := Open([]byte(testBoxes[i]), testGoodKey)
@@ -63,6 +71,8 @@ func TestUnboxing(t *testing.T) {
 	}
 }
 
+// TestUnboxingFails ensures that attempting to retrieve a message from
+// a box with the wrong key will fail.
 func TestUnboxingFails(t *testing.T) {
 	for i := 0; i < len(testMessages); i++ {
 		_, ok := Open([]byte(testBoxes[i]), testBadKey)
@@ -73,6 +83,7 @@ func TestUnboxingFails(t *testing.T) {
 	}
 }
 
+// TestLargerBox tests the encryption of a 4,026 byte test file.
 func TestLargerBox(t *testing.T) {
 	var err error
 	testBoxFile, err = ioutil.ReadFile("testdata/TEST.txt")
@@ -99,6 +110,7 @@ func TestLargerBox(t *testing.T) {
 	}
 }
 
+// Benchmark the Seal function, which secures the message.
 func BenchmarkSeal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, ok := Seal(testBoxFile, testGoodKey)
@@ -109,6 +121,7 @@ func BenchmarkSeal(b *testing.B) {
 	}
 }
 
+// Benchmark the Open function, which retrieves a message from a box.
 func BenchmarkOpen(b *testing.B) {
 	box, ok := Seal(testBoxFile, testGoodKey)
 	if !ok {
