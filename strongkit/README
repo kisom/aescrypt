@@ -1,0 +1,7 @@
+cryptokit/secretbox
+
+This is a NaCL-like implementation of a public-key cryptographic system
+using FIPS-compliant ciphers.
+
+strongbox provides 50-year security using ECDH with the NIST P521 curve,
+and the strongbox package as the underlying symmetric encryption system.
