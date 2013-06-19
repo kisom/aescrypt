@@ -101,7 +101,7 @@ func TestSignedBoxing(t *testing.T) {
 
 func TestSignedUnboxing(t *testing.T) {
 	for i := 0; i < len(testMessages); i++ {
-		message, ok := OpenSigned([]byte(testBoxes[i]), testPeerKey, testGoodPub)
+		message, ok := OpenAndVerify([]byte(testBoxes[i]), testPeerKey, testGoodPub)
 		if !ok {
 			fmt.Println("Signed unboxing failed: message", i)
 			t.FailNow()
@@ -115,7 +115,7 @@ func TestSignedUnboxing(t *testing.T) {
 
 func TestSignedBadUnboxing(t *testing.T) {
 	for i := 0; i < len(testMessages); i++ {
-		_, ok := OpenSigned([]byte(testBoxes[i]), testPeerKey, testBadPub)
+		_, ok := OpenAndVerify([]byte(testBoxes[i]), testPeerKey, testBadPub)
 		if ok {
 			fmt.Println("Unboxing should have failed: message", i)
 			t.FailNow()
@@ -194,7 +194,7 @@ func BenchmarkOpenSigned(b *testing.B) {
 		b.FailNow()
 	}
 	for i := 0; i < b.N; i++ {
-		_, ok := OpenSigned(box, testPeerKey, testGoodPub)
+		_, ok := OpenAndVerify(box, testPeerKey, testGoodPub)
 		if !ok {
 			fmt.Println("Couldn't open message: benchmark aborted.")
 			b.FailNow()

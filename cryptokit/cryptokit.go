@@ -253,7 +253,7 @@ func SignAndSeal(message []byte, key PrivateKey, public PublicKey, peer PublicKe
 // OpenSigned opens a signed box, and verifies the signature. If the box
 // couldn't be opened or the signature is invalid, OpenSigned returns false,
 // and the message value must be discarded.
-func OpenSigned(box []byte, key PrivateKey, peer PublicKey) (message []byte, ok bool) {
+func OpenAndVerify(box []byte, key PrivateKey, peer PublicKey) (message []byte, ok bool) {
 	smessage, ok := Open(box, key)
 	if !ok {
 		return
