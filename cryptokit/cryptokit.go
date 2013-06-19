@@ -50,7 +50,7 @@ var Overhead = publicKeySize + secretbox.Overhead
 
 // SignedOverhead is the number of bytes of overhead when signing and
 // boxing a message.
-var Overhead = publicKeySize + secretbox.Overhead + sigSize
+var SignedOverhead = publicKeySize + secretbox.Overhead + sigSize
 
 // The default source for random data is the crypto/rand package's Reader.
 var PRNG = rand.Reader
