@@ -1,8 +1,8 @@
 /*
-	strongkit is used to authenticate and secure messages using
-	public-key cryptography. It provides an interface similar to NaCL,
-	but uses ECIES using ephemeral ECDH for shared keys, and secret
-	box for securing messages.
+	box is used to authenticate and secure messages using public-key
+	cryptography. It provides an interface similar to NaCL, but uses
+	ECIES using ephemeral ECDH for shared keys, and secret box for
+	securing messages.
 
 	Messages should be secured using the Seal function, and recovered
 	using the Open function. A box (or authenticated and encrypted
@@ -17,16 +17,16 @@
 	on opening. These must be opened with the OpenSigned function,
 	and use ECDSA for signatures.
 
-	The boxes used in this package are suitable for 50-year security.
+	The boxes used in this package are suitable for 20-year security.
 */
-package stoutbox
+package box
 
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"github.com/gokyle/cryptokit/strongbox"
+	"github.com/gokyle/cryptobox/secretbox"
 	"math/big"
 )
 
@@ -34,27 +34,27 @@ type PublicKey []byte
 type PrivateKey []byte
 
 const (
-	publicKeySize  = 133
-	privateKeySize = 66
-	sigSize        = 140
+	publicKeySize  = 65
+	privateKeySize = 32
+	sigSize        = 64
 )
 
 const (
-	SharedKeySize  = 64
-	ecdhSharedSize = 64
+	SharedKeySize  = 48
+	ecdhSharedSize = 32
 )
 
 // Overhead is the number of bytes of overhead when boxing a message.
-var Overhead = publicKeySize + strongbox.Overhead
+var Overhead = publicKeySize + secretbox.Overhead
 
 // SignedOverhead is the number of bytes of overhead when signing and
 // boxing a message.
-var SignedOverhead = publicKeySize + strongbox.Overhead + sigSize
+var SignedOverhead = publicKeySize + secretbox.Overhead + sigSize
 
 // The default source for random data is the crypto/rand package's Reader.
 var PRNG = rand.Reader
 
-var curve = elliptic.P521()
+var curve = elliptic.P256()
 
 // ecdh performs the ECDH key agreement method to generate a shared key
 // between a pair of keys.
@@ -67,10 +67,10 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	if x == nil {
 		return nil, false
 	}
-	xb := x.Bytes()
+	xb := zeroPad(x.Bytes(), ecdhSharedSize)
 
-	skey := xb[:32]
-	mkey := xb[32:]
+	skey := xb[:16]
+	mkey := xb[16:]
 	h := sha256.New()
 	h.Write(mkey)
 	mkey = h.Sum(nil)
@@ -79,7 +79,7 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 }
 
 // GenerateKey generates an appropriate private and public keypair for
-// use in cryptokit.
+// use in box.
 func GenerateKey() (PrivateKey, PublicKey, bool) {
 	key, x, y, err := elliptic.GenerateKey(curve, PRNG)
 	if err != nil {
@@ -87,7 +87,6 @@ func GenerateKey() (PrivateKey, PublicKey, bool) {
 	}
 	peer := elliptic.Marshal(curve, x, y)
 	if peer == nil {
-		return nil, nil, false
 	}
 	if len(key) != privateKeySize || len(peer) != publicKeySize {
 		return nil, nil, false
@@ -115,7 +114,7 @@ func Seal(message []byte, peer PublicKey) (box []byte, ok bool) {
 		return
 	}
 
-	sbox, ok := strongbox.Seal(message, skey)
+	sbox, ok := secretbox.Seal(message, skey)
 	if !ok {
 		return
 	}
@@ -135,7 +134,7 @@ func Open(box []byte, key PrivateKey) (message []byte, ok bool) {
 		return
 	}
 
-	if len(box) < publicKeySize+strongbox.Overhead {
+	if len(box) < publicKeySize+secretbox.Overhead {
 		return
 	}
 
@@ -145,7 +144,7 @@ func Open(box []byte, key PrivateKey) (message []byte, ok bool) {
 		return
 	}
 
-	message, ok = strongbox.Open(box[publicKeySize:], shared)
+	message, ok = secretbox.Open(box[publicKeySize:], shared)
 	return
 }
 
@@ -188,7 +187,7 @@ func sign(message []byte, key PrivateKey, pub PublicKey) (smessage []byte, ok bo
 	}
 	r, s, err := ecdsa.Sign(PRNG, skey, hash)
 	if err == nil {
-		smessage = make([]byte, len(message)+sigSize)
+		smessage = make([]byte, len(message)+64)
 		copy(smessage, message)
 		sig := marshalECDSASignature(r, s)
 		copy(smessage[len(message):], sig)
@@ -222,12 +221,13 @@ func marshalECDSASignature(r, s *big.Int) []byte {
 	if r == nil || s == nil {
 		return make([]byte, sigSize)
 	}
-	padLen := sigSize / 2
 	sig := make([]byte, sigSize)
-	rb := zeroPad(r.Bytes(), padLen)
-	sb := zeroPad(s.Bytes(), padLen)
+	rb := r.Bytes()
+	rb = zeroPad(rb, 32)
+	sb := s.Bytes()
+	sb = zeroPad(sb, 32)
 	copy(sig, rb)
-	copy(sig[padLen:], sb)
+	copy(sig[32:], sb)
 	return sig
 }
 
@@ -235,11 +235,8 @@ func unmarshalECDSASignature(sig []byte) (r, s *big.Int) {
 	if len(sig) != sigSize {
 		return
 	}
-	padLen := sigSize / 2
-	rb := sig[:padLen]
-	sb := sig[padLen:]
-	r = new(big.Int).SetBytes(rb)
-	s = new(big.Int).SetBytes(sb)
+	r = new(big.Int).SetBytes(sig[:32])
+	s = new(big.Int).SetBytes(sig[32:])
 	return
 }
 
