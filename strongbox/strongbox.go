@@ -1,6 +1,6 @@
 /*
 	strongbox is used to authenticate and secure small messages. It
-	provides an interface similar to NaCL, but uses AES-128 with
+	provides an interface similar to NaCL, but uses AES-256 with
 	HMAC-SHA-256 for securing messages.
 
 	Messages should be secured using the Seal function, and recovered
