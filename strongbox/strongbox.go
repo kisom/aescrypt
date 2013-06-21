@@ -1,7 +1,7 @@
 /*
 	strongbox is used to authenticate and secure small messages. It
 	provides an interface similar to NaCL, but uses AES-256 with
-	HMAC-SHA-256 for securing messages.
+	HMAC-SHA-384 for securing messages.
 
 	Messages should be secured using the Seal function, and recovered
 	using the Open function. A box (or authenticated and encrypted
@@ -21,14 +21,14 @@ import (
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/subtle"
 	"fmt"
 	"io"
 )
 
 const cryptKeySize = 32
-const tagKeySize = 32
+const tagKeySize = 48
 
 const VersionString = "1.0.0"
 
@@ -36,7 +36,7 @@ const VersionString = "1.0.0"
 const KeySize = cryptKeySize + tagKeySize
 
 // Overhead is the number of bytes of overhead when boxing a message.
-const Overhead = aes.BlockSize + sha256.Size
+const Overhead = aes.BlockSize + sha512.Size384
 
 var (
 	errinvalidKeySize    = fmt.Errorf("invalid key size")
@@ -87,13 +87,13 @@ func encrypt(key []byte, in []byte) (out []byte, err error) {
 }
 
 func computeTag(key []byte, in []byte) (tag []byte) {
-	h := hmac.New(sha256.New, key)
+	h := hmac.New(sha512.New384, key)
 	h.Write(in)
 	return h.Sum(nil)
 }
 
 func checkTag(key, in []byte) bool {
-	ctlen := len(in) - sha256.Size
+	ctlen := len(in) - sha512.Size384
 	tag := in[ctlen:]
 	ct := in[:ctlen]
 	actualTag := computeTag(key, ct)
@@ -148,7 +148,7 @@ func Open(box []byte, key Key) (message []byte, ok bool) {
 		return
 	}
 
-	msgLen := len(box) - sha256.Size
+	msgLen := len(box) - sha512.Size384
 	message, err := decrypt(key[:cryptKeySize], box[:msgLen])
 	ok = checkTag(key[cryptKeySize:], box)
 	ok = ok && err == nil

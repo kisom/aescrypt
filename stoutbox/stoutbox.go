@@ -25,7 +25,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/sha256"
+	"crypto/sha512"
 	"github.com/gokyle/cryptobox/strongbox"
 	"math/big"
 )
@@ -42,8 +42,8 @@ const (
 )
 
 const (
-	SharedKeySize  = 64
-	ecdhSharedSize = 64
+	SharedKeySize  = 80
+	ecdhSharedSize = 80
 )
 
 // Overhead is the number of bytes of overhead when boxing a message.
@@ -73,7 +73,7 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 
 	skey := xb[:32]
 	mkey := xb[32:]
-	h := sha256.New()
+	h := sha512.New384()
 	h.Write(mkey)
 	mkey = h.Sum(nil)
 
@@ -180,7 +180,7 @@ func ecdsa_public(peer PublicKey) (pkey *ecdsa.PublicKey, ok bool) {
 }
 
 func sign(message []byte, key PrivateKey, pub PublicKey) (smessage []byte, ok bool) {
-	h := sha256.New()
+	h := sha512.New384()
 	h.Write(message)
 	hash := h.Sum(nil)
 
@@ -206,7 +206,7 @@ func verify(smessage []byte, peer PublicKey) bool {
 	sigPos := len(smessage) - sigSize
 	message := smessage[:sigPos]
 	sig := smessage[sigPos:]
-	h := sha256.New()
+	h := sha512.New384()
 	h.Write(message)
 
 	pub, ok := ecdsa_public(peer)
