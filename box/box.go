@@ -33,6 +33,8 @@ import (
 type PublicKey []byte
 type PrivateKey []byte
 
+const VersionString = "1.0.0"
+
 const (
 	publicKeySize  = 65
 	privateKeySize = 32
