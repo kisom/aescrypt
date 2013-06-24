@@ -16,12 +16,12 @@ authenticated secure messages. Boxes operate under the following threat model:
   of the keys themselves. There is no identity bound to a key.
 
 
-Cipher Selection
-* secretbox: AES-128 in CTR mode with HMAC-SHA-256
-* strongbox: AES-256 in CTR mode with HMAC-SHA-256
-
-
 License:
 
 cryptokit is released under the ISC license. See the include LICENSE
 file for details.
+
+
+See also:
+
+The CryptoBox project: http://cryptobox.tyrfingr.is/
