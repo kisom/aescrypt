@@ -64,7 +64,7 @@ func TestKeyGeneration(t *testing.T) {
 	    ioutil.WriteFile("testvectors/good.key", testGoodKey, 0644)
 	    ioutil.WriteFile("testvectors/bad.key", testBadKey, 0644)
 }
- */
+*/
 
 /*
 func TestBasicUnbox(t *testing.T) {
@@ -87,7 +87,7 @@ func TestBasicUnbox(t *testing.T) {
 		t.FailNow()
 	}
 }
- */
+*/
 
 // TestBoxing ensures that sealing a message into a box works properly.
 func TestBoxing(t *testing.T) {
