@@ -1,12 +1,12 @@
-cryptokit
+cryptobox
 
-CryptoKit aims to provide similar functionality to NaCL[1], while using
+CryptoBox aims to provide similar functionality to NaCL[1], while using
 FIPS ciphers. It provides the following packages:
 
 * secretbox: secure and authenticate small messages with 20-year security.
 * strongbox: secure and authenticate small messages with 50-year security.
 
-cryptokit operates on the concept of "boxes", which are encrypted and
+cryptobox operates on the concept of "boxes", which are encrypted and
 authenticated secure messages. Boxes operate under the following threat model:
 
 * Messages should be confidential, but it is not a concern that Eve can
@@ -18,7 +18,7 @@ authenticated secure messages. Boxes operate under the following threat model:
 
 License:
 
-cryptokit is released under the ISC license. See the include LICENSE
+cryptobox is released under the ISC license. See the include LICENSE
 file for details.
 
 
