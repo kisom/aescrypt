@@ -1,4 +1,4 @@
-cryptokit/strongbox
+cryptobox/strongbox
 
 This is a NaCL-like implementation of a cryptographic system using
 FIPS-compliant ciphers.
