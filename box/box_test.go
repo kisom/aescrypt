@@ -209,6 +209,26 @@ func TestLargerBox(t *testing.T) {
 	}
 }
 
+func TestKeySigning(t *testing.T) {
+	sig, ok := SignKey(testGoodKey, testGoodPub, testPeerPub)
+	if !ok {
+		fmt.Println("Failed to sign key.")
+		t.FailNow()
+	}
+
+	ok = VerifySignedKey(testPeerPub, testGoodPub, sig)
+	if !ok {
+		fmt.Println("Key signature validation failed.")
+		t.FailNow()
+	}
+
+	ok = VerifySignedKey(testPeerPub, testBadPub, sig)
+	if ok {
+		fmt.Println("Key signature check should have failed.")
+		t.FailNow()
+	}
+}
+
 func BenchmarkUnsignedSeal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, ok := Seal(testBoxFile, testPeerPub)
@@ -267,6 +287,33 @@ func BenchmarkSharedKey(b *testing.B) {
 		_, ok := SharedKey(testGoodKey, testPeerPub)
 		if !ok {
 			fmt.Println("Computing shared key failed: benchmark aborted.")
+			b.FailNow()
+		}
+	}
+}
+
+// Benchmark key signing.
+func BenchmarkKeySigning(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, ok := SignKey(testGoodKey, testGoodPub, testPeerPub)
+		if !ok {
+			fmt.Println("Key signing failed: benchmark aborted.")
+			b.FailNow()
+		}
+	}
+}
+
+// Benchmark key signature verification.
+func BenchmarkKeyVerification(b *testing.B) {
+	sig, ok := SignKey(testGoodKey, testGoodPub, testPeerPub)
+	if !ok {
+		fmt.Println("Key signing failed: benchmark aborted.")
+		b.FailNow()
+	}
+	for i := 0; i < b.N; i++ {
+		ok = VerifySignedKey(testPeerPub, testGoodPub, sig)
+		if !ok {
+			fmt.Println("Key signature verification failed: benchmark aborted.")
 			b.FailNow()
 		}
 	}

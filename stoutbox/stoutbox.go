@@ -114,11 +114,13 @@ func Seal(message []byte, peer PublicKey) (box []byte, ok bool) {
 	if !ok {
 		return
 	}
+	defer zero(eph_key)
 
 	skey, ok := ecdh(eph_key, peer)
 	if !ok {
 		return
 	}
+	defer zero(skey)
 
 	sbox, ok := strongbox.Seal(message, skey)
 	if !ok {
@@ -299,4 +301,15 @@ func KeyIsSuitable(key PrivateKey, pub PublicKey) bool {
 		return false
 	}
 	return true
+}
+
+// Zero out a byte slice.
+func zero(in []byte) {
+	if in == nil {
+		return
+	}
+	inlen := len(in)
+	for i := 0; i < inlen; i++ {
+		in[i] ^= in[i]
+	}
 }

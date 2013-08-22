@@ -33,7 +33,7 @@ import (
 type PublicKey []byte
 type PrivateKey []byte
 
-const VersionString = "1.0.0"
+const VersionString = "1.1.0"
 
 const (
 	publicKeySize  = 65
@@ -115,11 +115,13 @@ func Seal(message []byte, peer PublicKey) (box []byte, ok bool) {
 	if !ok {
 		return
 	}
+	defer zero(eph_key)
 
 	skey, ok := ecdh(eph_key, peer)
 	if !ok {
 		return
 	}
+	defer zero(skey)
 
 	sbox, ok := secretbox.Seal(message, skey)
 	if !ok {
@@ -150,6 +152,7 @@ func Open(box []byte, key PrivateKey) (message []byte, ok bool) {
 	if !ok {
 		return
 	}
+	defer zero(shared)
 
 	message, ok = secretbox.Open(box[publicKeySize:], shared)
 	return
@@ -271,21 +274,6 @@ func OpenAndVerify(box []byte, key PrivateKey, peer PublicKey) (message []byte, 
 	return
 }
 
-// zeroPad returns a new slice of length size. The contents of input are right
-// aligned in the new slice.
-func zeroPad(in []byte, outlen int) (out []byte) {
-	var inLen int
-	if inLen = len(in); inLen > outlen {
-		inLen = outlen
-	} else if inLen == outlen {
-		return in
-	}
-	start := outlen - inLen
-	out = make([]byte, outlen)
-	copy(out[start:], in)
-	return
-}
-
 // IsKeySuitable takes a private and/or public key, and returns true if
 // all keys passed in are valid. If no key is passed in, or any key passed
 // in is invalid, it will return false.
@@ -298,4 +286,47 @@ func KeyIsSuitable(key PrivateKey, pub PublicKey) bool {
 		return false
 	}
 	return true
+}
+
+// SignKey takes the key pair specified in priv, pub and uses that to
+// sign the peer key. It returns a signature and true on success;
+// if ok is false, the signature should be discarded as signing failed.
+func SignKey(priv PrivateKey, pub, peer PublicKey) (sig []byte, ok bool) {
+	key, ok := ecdsa_private(priv, pub)
+	if !ok {
+		return nil, false
+	}
+
+	h := sha256.New()
+	h.Write(peer)
+	m := h.Sum(nil)
+	r, s, err := ecdsa.Sign(PRNG, key, m)
+	if err != nil {
+		return nil, false
+	}
+	sig = marshalSignature(r, s)
+	if sig == nil {
+		return nil, false
+	}
+	return sig, true
+}
+
+// VerifySign checks the signature on the peer key with the sigpub
+// key. It returns true if the signature is valid, or false if the
+// signature is invalid or an error occurred.
+func VerifySignedKey(pub, sigpub PublicKey, sig []byte) bool {
+	ecpub, ok := ecdsa_public(sigpub)
+	if !ok {
+		return false
+	}
+	
+	r, s := unmarshalSignature(sig)
+	if r == nil || s == nil {
+		return false
+	}
+
+	h := sha256.New()
+	h.Write(pub)
+	m := h.Sum(nil)
+	return ecdsa.Verify(ecpub, m, r, s)
 }
