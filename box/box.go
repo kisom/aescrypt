@@ -80,6 +80,11 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	return append(skey, mkey...), true
 }
 
+// SharedKey precomputes a key for encrypting with strongbox.
+func SharedKey(key PrivateKey, peer PublicKey) (secretbox.Key, bool) {
+	return ecdh(key, peer)
+}
+
 // GenerateKey generates an appropriate private and public keypair for
 // use in box.
 func GenerateKey() (PrivateKey, PublicKey, bool) {

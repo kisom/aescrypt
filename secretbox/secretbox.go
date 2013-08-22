@@ -148,9 +148,11 @@ func Open(box []byte, key Key) (message []byte, ok bool) {
 	}
 
 	msgLen := len(box) - sha256.Size
+	if !checkTag(key[cryptKeySize:], box) {
+		return nil, ok
+	}
 	message, err := decrypt(key[:cryptKeySize], box[:msgLen])
-	ok = checkTag(key[cryptKeySize:], box)
-	ok = ok && err == nil
+	ok = err == nil
 	return
 }
 

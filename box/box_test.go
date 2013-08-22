@@ -260,3 +260,14 @@ func BenchmarkOpenSigned(b *testing.B) {
 		}
 	}
 }
+
+// Benchmark the SharedKey function.
+func BenchmarkSharedKey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, ok := SharedKey(testGoodKey, testPeerPub)
+		if !ok {
+			fmt.Println("Computing shared key failed: benchmark aborted.")
+			b.FailNow()
+		}
+	}
+}
