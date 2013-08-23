@@ -28,6 +28,7 @@ import (
 	"crypto/sha256"
 	"github.com/gokyle/cryptobox/secretbox"
 	"math/big"
+	"fmt"
 )
 
 type PublicKey []byte
@@ -42,12 +43,19 @@ const (
 )
 
 const (
+	BoxUnsigned	byte = 1
+	BoxSigned byte = 2
+	BoxShared byte = 3
+	BoxSharedSigned byte = 4
+)
+
+const (
 	SharedKeySize  = 48
 	ecdhSharedSize = 32
 )
 
 // Overhead is the number of bytes of overhead when boxing a message.
-var Overhead = publicKeySize + secretbox.Overhead
+var Overhead = publicKeySize + secretbox.Overhead + 9 // 9: two four byte lengths and type
 
 // SignedOverhead is the number of bytes of overhead when signing and
 // boxing a message.
@@ -107,6 +115,7 @@ func GenerateKey() (PrivateKey, PublicKey, bool) {
 // bytes longer than the message. These boxes are not dependent on having
 // a private key.
 func Seal(message []byte, peer PublicKey) (box []byte, ok bool) {
+	return lockUnsignedBox(peer, message)
 	if !KeyIsSuitable(nil, peer) {
 		return
 	}
@@ -139,6 +148,7 @@ func Seal(message []byte, peer PublicKey) (box []byte, ok bool) {
 // message must be discarded. The returned message will be Overhead
 // bytes shorter than the box.
 func Open(box []byte, key PrivateKey) (message []byte, ok bool) {
+	return openUnsignedBox(box, key)
 	if !KeyIsSuitable(key, nil) {
 		return
 	}
@@ -329,4 +339,100 @@ func VerifySignedKey(pub, sigpub PublicKey, sig []byte) bool {
 	h.Write(pub)
 	m := h.Sum(nil)
 	return ecdsa.Verify(ecpub, m, r, s)
+}
+
+func lockUnsignedBox(peer PublicKey, message []byte) (locked []byte, ok bool) {
+	if message == nil {
+		return nil, false
+	} else if !KeyIsSuitable(nil, peer) {
+		fmt.Println("unsuitable key")
+		fmt.Printf("%x\n", peer)
+		return
+	}
+
+	eph_key, eph_peer, ok := GenerateKey()
+	if !ok {
+		fmt.Println("eph fail")
+		return
+	}
+	defer zero(eph_key)
+
+	skey, ok := ecdh(eph_key, peer)
+	if !ok {
+		return
+	}
+	defer zero(skey)
+
+	packer := newbw([]byte{BoxUnsigned})
+	sbox, ok := secretbox.Seal(message, skey)
+	if !ok {
+		return nil, false
+	}
+
+	packer.Write(eph_peer)
+	packer.Write(sbox)
+	locked = packer.Bytes()
+	if locked == nil {
+		ok = false
+	} else {
+		ok = true
+	}
+	return
+}
+
+func openUnsignedBox(box []byte, key PrivateKey) (message []byte, ok bool) {
+	if box == nil {
+		return nil, false
+	} else if box[0] != BoxUnsigned {
+		return nil, false
+	}
+	unpacker := newbr(box[1:])
+	eph_pub := unpacker.Next()
+	sbox := unpacker.Next()
+
+	shared, ok := ecdh(key, eph_pub)
+	if !ok {
+		return nil, false
+	}
+
+	return secretbox.Open(sbox, shared)
+}
+
+func lockSignedBox(peer PublicKey, message []byte) (locked []byte, ok bool) {
+	if message == nil {
+		return nil, false
+	} else if !KeyIsSuitable(nil, peer) {
+		fmt.Println("unsuitable key")
+		fmt.Printf("%x\n", peer)
+		return
+	}
+
+	eph_key, eph_peer, ok := GenerateKey()
+	if !ok {
+		fmt.Println("eph fail")
+		return
+	}
+	defer zero(eph_key)
+
+	skey, ok := ecdh(eph_key, peer)
+	if !ok {
+		return
+	}
+	defer zero(skey)
+
+	packer := newbw([]byte{BoxUnsigned})
+	sbox, ok := secretbox.Seal(message, skey)
+	if !ok {
+		return nil, false
+	}
+
+	packer.Write(eph_peer)
+	packer.Write(sbox)
+	locked = packer.Bytes()
+	if locked == nil {
+		ok = false
+	} else {
+		ok = true
+	}
+	return
 }

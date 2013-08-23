@@ -6,8 +6,10 @@ import (
 	"math/big"
 )
 
+const u32Len uint32 = 4
+
 func marshalSignature(r, s *big.Int) []byte {
-	sig := newbw()
+	sig := newbw(nil)
 	sig.Write(r.Bytes())
 	sig.Write(s.Bytes())
 	return sig.Bytes()
@@ -18,9 +20,12 @@ type bw struct {
 	err error
 }
 
-func newbw() *bw {
+func newbw(init []byte) *bw {
 	b := new(bw)
 	b.buf = new(bytes.Buffer)
+	if init != nil {
+		b.buf.Write(init)
+	}
 	return b
 }
 
@@ -30,6 +35,16 @@ func (b *bw) Write(data []byte) {
 	}
 	b.err = binary.Write(b.buf, binary.BigEndian, uint32(len(data)))
 	b.buf.Write(data)
+}
+
+func (b *bw) WriteUint32(n uint32) {
+	if b.err != nil {
+		return
+	}
+	b.err = binary.Write(b.buf, binary.BigEndian, u32Len)
+	if b.err != nil {
+		b.err = binary.Write(b.buf, binary.BigEndian, n)
+	}
 }
 
 func (b *bw) Bytes() []byte {
@@ -74,6 +89,21 @@ func (b *br) Next() []byte {
 		return data
 	}
 	return nil
+}
+
+func (b *br) NextU32() (uint32, bool) {
+	if b.err != nil {
+		return 0, false
+	}
+
+	var n uint32
+	b.err = binary.Read(b.buf, binary.BigEndian, &n)
+	if b.err != nil || n != u32Len {
+		return 0, false
+	}
+
+	b.err = binary.Read(b.buf, binary.BigEndian, &n)
+	return n, b.err == nil
 }
 
 // Zero out a byte slice.
