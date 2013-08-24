@@ -3,8 +3,16 @@ cryptobox
 CryptoBox aims to provide similar functionality to NaCL[1], while using
 FIPS ciphers. It provides the following packages:
 
+* box: secure and authenticate small messages with 20-year security
+  using public key cryptography.
+* stoutbox: secure and authenticate small messages with 50-year security
+  using public key cryptography.
+
 * secretbox: secure and authenticate small messages with 20-year security.
 * strongbox: secure and authenticate small messages with 50-year security.
+
+Developers should prefer the box and stoutbox packages, as these reduce the
+possibility of key compromise by using public keys.
 
 cryptobox operates on the concept of "boxes", which are encrypted and
 authenticated secure messages. Boxes operate under the following threat model:
@@ -24,4 +32,5 @@ file for details.
 
 See also:
 
-The CryptoBox project: http://cryptobox.tyrfingr.is/
+The CryptoBox project: http://cryptobox.tyrfingr.is/. This site contains
+the specification, including test vectors.
