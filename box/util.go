@@ -131,5 +131,3 @@ func zeroPad(in []byte, outlen int) (out []byte) {
 	copy(out[start:], in)
 	return
 }
-
-

@@ -78,17 +78,17 @@ func TestKeyGeneration(t *testing.T) {
 	var ok bool
 	testGoodKey, testGoodPub, ok = GenerateKey()
 	if !ok {
-		fmt.Println("key generation failed")
+		fmt.Println("Key generation failed")
 		t.FailNow()
 	}
 	testPeerKey, testPeerPub, ok = GenerateKey()
 	if !ok {
-		fmt.Println("key generation failed")
+		fmt.Println("Key generation failed")
 		t.FailNow()
 	}
 	testBadKey, testBadPub, ok = GenerateKey()
 	if !ok {
-		fmt.Println("key generation failed")
+		fmt.Println("Key generation failed")
 		t.FailNow()
 	}
 	ioutil.WriteFile("testvectors/good.key", testGoodKey, 0644)
@@ -108,6 +108,9 @@ func TestBoxing(t *testing.T) {
 			t.FailNow()
 		} else if len(box) != len(testMessages[i])+Overhead {
 			fmt.Println("The box length is invalid.")
+			t.FailNow()
+		} else if BoxIsSigned(box) {
+			fmt.Println("IsBoxSigned should return false.")
 			t.FailNow()
 		}
 		/*
@@ -150,8 +153,11 @@ func TestSignedBoxing(t *testing.T) {
 		if !ok {
 			fmt.Println("Boxing failed: message", i)
 			t.FailNow()
-		} else if len(box) != len(testMessages[i])+Overhead+sigSize {
+		} else if len(box) < len(testMessages[i])+Overhead+sigSize {
 			fmt.Println("The box length is invalid.")
+			t.FailNow()
+		} else if !BoxIsSigned(box) {
+			fmt.Println("IsBoxSigned should return true.")
 			t.FailNow()
 		}
 		testBoxes[i] = string(box)
