@@ -485,7 +485,12 @@ func TestSharedUnboxing(t *testing.T) {
 				fmt.Println("Shared unboxing did not return same plaintext.")
 				t.FailNow()
 			}
-
+			_, ok = OpenShared([]byte(testBoxes[i]),
+				testPeerKey, testPeerPub)
+			if ok {
+				fmt.Println("Shared unboxing should have failed!")
+				t.FailNow()
+			}
 		}
 	}
 }
@@ -517,10 +522,24 @@ func TestSharedSignedUnboxing(t *testing.T) {
 				fmt.Println("Shared unboxing did not return same plaintext.")
 				t.FailNow()
 			}
-
+			_, ok = OpenSharedAndVerify([]byte(testBoxes[i]),
+				testPeerKey, testPeerPub, testGoodPub)
+			if ok {
+				fmt.Println("Shared unboxing should have failed!")
+				t.FailNow()
+			}
+			_, ok = OpenSharedAndVerify([]byte(testBoxes[i]),
+				peerPrivList[kn],
+				peerPublicList[kn],
+				testPeerPub)
+			if ok {
+				fmt.Println("Signature verification should have failed!")
+				t.FailNow()
+			}
 		}
 	}
 }
+
 
 func BenchmarkSharedUnsignedSeal(b *testing.B) {
 	for i := 0; i < b.N; i++ {

@@ -27,7 +27,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha512"
-	"fmt"
 	"github.com/gokyle/cryptobox/strongbox"
 	"math/big"
 )
@@ -505,10 +504,8 @@ func SignAndSealShared(message []byte, peers []PublicKey, sigkey PrivateKey, sig
 
 func unpackSharedBox(box []byte, key PrivateKey, public PublicKey) (btype byte, message []byte, ok bool) {
 	if box == nil {
-		fmt.Println("nil box")
 		return 0, nil, false
 	} else if !KeyIsSuitable(key, public) {
-		fmt.Println("bad key")
 		return 0, nil, false
 	}
 	btype = box[0]
@@ -516,22 +513,18 @@ func unpackSharedBox(box []byte, key PrivateKey, public PublicKey) (btype byte, 
 	unpacker := newbr(box[1:])
 	e_pub := unpacker.Next()
 	if e_pub == nil {
-		fmt.Println("failed to get ephemeral key")
 		return 0, nil, false
 	}
 
 	packedPeers := unpacker.Next()
 	if packedPeers == nil {
-		fmt.Println("failed to unpack peer list")
 		return 0, nil, false
 	} else if packedPeers[0] != peerList {
-		fmt.Println("wrong btype")
 		return 0, nil, false
 	}
 	peerUnpack := newbr(packedPeers[1:])
 	peerCount, ok := peerUnpack.NextU32()
 	if !ok {
-		fmt.Println("Failed to unpack peer count")
 		return 0, nil, false
 	}
 
@@ -541,40 +534,33 @@ func unpackSharedBox(box []byte, key PrivateKey, public PublicKey) (btype byte, 
 	for i := uint32(0); i < peerCount; i++ {
 		peer := peerUnpack.Next()
 		if peer == nil {
-			fmt.Println("can't unpack peer")
 			return 0, nil, false
 		}
 		sbox := peerUnpack.Next()
 		if sbox == nil {
-			fmt.Println("can't unpack sbox", i)
 			return 0, nil, false
 		} else if !bytes.Equal(peer, public) {
 			continue
 		}
 		skey, ok := ecdh(key, e_pub)
 		if !ok {
-			fmt.Println("shared key failure")
 			return 0, nil, false
 		}
 		shared, ok = strongbox.Open(sbox, skey)
 		if !ok {
-			fmt.Println("strongbox fails")
 			return 0, nil, false
 		}
 		break
 	}
 	if shared == nil {
-		fmt.Println("no shared key found")
 		return 0, nil, false
 	}
 	sbox := unpacker.Next()
 	if sbox == nil {
-		fmt.Println("no message found")
 		return 0, nil, false
 	}
 	message, ok = strongbox.Open(sbox, shared)
 	if !ok {
-		fmt.Println("strongbox failure")
 	}
 	return btype, message, ok
 }
@@ -585,13 +571,10 @@ func unpackSharedBox(box []byte, key PrivateKey, public PublicKey) (btype byte, 
 func OpenShared(box []byte, key PrivateKey, public PublicKey) (message []byte, ok bool) {
 	btype, message, ok := unpackSharedBox(box, key, public)
 	if !ok {
-		fmt.Println("not ok")
 		return nil, false
 	} else if message == nil {
-		fmt.Println("nil m")
 		return nil, false
 	} else if btype != BoxShared {
-		fmt.Println("bad btype")
 		return nil, false
 	}
 	return message, true

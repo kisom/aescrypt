@@ -153,7 +153,7 @@ func Open(box []byte, key Key) (message []byte, ok bool) {
 		return nil, false
 	}
 	message, err := decrypt(key[:cryptKeySize], box[:msgLen])
-	ok =  err == nil
+	ok = err == nil
 	return
 }
 
