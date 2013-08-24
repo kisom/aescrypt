@@ -42,7 +42,7 @@ func (b *bw) WriteUint32(n uint32) {
 		return
 	}
 	b.err = binary.Write(b.buf, binary.BigEndian, u32Len)
-	if b.err != nil {
+	if b.err == nil {
 		b.err = binary.Write(b.buf, binary.BigEndian, n)
 	}
 }
@@ -98,7 +98,7 @@ func (b *br) NextU32() (uint32, bool) {
 
 	var n uint32
 	b.err = binary.Read(b.buf, binary.BigEndian, &n)
-	if b.err != nil || n != u32Len {
+	if b.err != nil {
 		return 0, false
 	}
 

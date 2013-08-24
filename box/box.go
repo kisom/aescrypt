@@ -79,7 +79,7 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	if x == nil {
 		return nil, false
 	}
-	xb := zeroPad(x.Bytes(), ecdhSharedSize)
+	xb := zeroPad(x.Bytes(), SharedKeySize)
 
 	skey := xb[:16]
 	mkey := xb[16:]
@@ -90,7 +90,7 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	return append(skey, mkey...), true
 }
 
-// SharedKey precomputes a key for encrypting with strongbox.
+// SharedKey precomputes a key for encrypting with secretbox.
 func SharedKey(key PrivateKey, peer PublicKey) (secretbox.Key, bool) {
 	return ecdh(key, peer)
 }
@@ -234,6 +234,11 @@ func ecdsa_public(peer PublicKey) (pkey *ecdsa.PublicKey, ok bool) {
 // boolean indicating success; on success, the signature value returned will
 // contain the signature.
 func Sign(message []byte, key PrivateKey, pub PublicKey) (signature []byte, ok bool) {
+	if message == nil {
+		return nil, false
+	} else if !KeyIsSuitable(key, pub) {
+		return nil, false
+	}
 	h := sha256.New()
 	h.Write(message)
 	hash := h.Sum(nil)
@@ -258,6 +263,11 @@ func Sign(message []byte, key PrivateKey, pub PublicKey) (signature []byte, ok b
 // for the message. If there is a failure (include failing to verify the
 // signature), Verify returns false.
 func Verify(message, signature []byte, signer PublicKey) bool {
+	if message == nil || signature == nil {
+		return false
+	} else if !KeyIsSuitable(nil, signer) {
+		return false
+	}
 	r, s := unmarshalSignature(signature)
 	if r == nil || s == nil {
 		return false
@@ -468,9 +478,9 @@ func SealShared(message []byte, peers []PublicKey) (box []byte, ok bool) {
 	return box, ok
 }
 
-// SignAndSeal adds a digital signature to the shared message before
+// SignAndSealShared adds a digital signature to the shared message before
 // sealing it.
-func SealSharedSigned(message []byte, peers []PublicKey, sigkey PrivateKey, sigpub PublicKey) (box []byte, ok bool) {
+func SignAndSealShared(message []byte, peers []PublicKey, sigkey PrivateKey, sigpub PublicKey) (box []byte, ok bool) {
 	sig, ok := Sign(message, sigkey, sigpub)
 	if !ok {
 		return nil, false
@@ -499,6 +509,7 @@ func unpackSharedBox(box []byte, key PrivateKey, public PublicKey) (btype byte, 
 	} else if !KeyIsSuitable(key, public) {
 		return 0, nil, false
 	}
+	btype = box[0]
 
 	unpacker := newbr(box[1:])
 	e_pub := unpacker.Next()
@@ -509,9 +520,10 @@ func unpackSharedBox(box []byte, key PrivateKey, public PublicKey) (btype byte, 
 	packedPeers := unpacker.Next()
 	if packedPeers == nil {
 		return 0, nil, false
+	} else if packedPeers[0] != peerList {
+		return 0, nil, false
 	}
-
-	peerUnpack := newbr(packedPeers)
+	peerUnpack := newbr(packedPeers[1:])
 	peerCount, ok := peerUnpack.NextU32()
 	if !ok {
 		return 0, nil, false
