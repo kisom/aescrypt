@@ -47,12 +47,14 @@ var PRNG = rand.Reader
 type Key []byte
 type nonce []byte
 
-// GenerateKey returns a key suitable for sealing and opening boxes.
-func GenerateKey() (Key, error) {
+// GenerateKey returns a key suitable for sealing and opening boxes, and a
+// boolean indicating success. If the boolean is false, the Key value must
+// be discarded.
+func GenerateKey() (Key, bool) {
 	var key Key = make([]byte, KeySize)
 
 	_, err := io.ReadFull(PRNG, key)
-	return key, err
+	return key, err == nil
 }
 
 func generateNonce() (nonce, error) {
