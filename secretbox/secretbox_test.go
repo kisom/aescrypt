@@ -1,8 +1,10 @@
 package secretbox
 
 import "bytes"
+import "crypto/rand"
 import "fmt"
 import "io/ioutil"
+import "math/big"
 import "testing"
 
 var testMessages = []string{
@@ -37,6 +39,37 @@ var (
 		0x60, 0xf2, 0x26, 0x80, 0xfa, 0xb2, 0x30, 0xf8,
 	}
 )
+
+func randInt(max int64) int64 {
+	maxBig := big.NewInt(max)
+	n, err := rand.Int(PRNG, maxBig)
+	if err != nil {
+		return -1
+	}
+	return n.Int64()
+}
+
+func mutate(in []byte) (out []byte) {
+	out = make([]byte, len(in))
+	copy(out, in)
+
+	iterations := (randInt(int64(len(out))) / 2) + 1
+	if iterations == -1 {
+		panic("mutate failed")
+	}
+	for i := 0; i < int(iterations); i++ {
+		mByte := randInt(int64(len(out)))
+		mBit := randInt(7)
+		if mBit == -1 || mByte == -1 {
+			panic("mutate failed")
+		}
+		out[mByte] ^= (1 << uint(mBit))
+	}
+	if bytes.Equal(out, in) {
+		panic("mutate failed")
+	}
+	return out
+}
 
 // TestKeyGeneration generates a pair of keys, verifying that the key
 // generation code works properly.
@@ -122,6 +155,11 @@ func TestUnboxingFails(t *testing.T) {
 		_, ok := Open([]byte(testBoxes[i]), testBadKey)
 		if ok {
 			fmt.Println("Unboxing should have failed with bad key:", i)
+			t.FailNow()
+		}
+		_, ok = Open(mutate([]byte(testBoxes[i])), testGoodKey)
+		if ok {
+			fmt.Println("Modified message should have failed:", i)
 			t.FailNow()
 		}
 	}

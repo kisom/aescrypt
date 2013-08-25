@@ -84,6 +84,9 @@ func (b *br) Next() []byte {
 	var dlen uint32
 	b.err = binary.Read(b.buf, binary.BigEndian, &dlen)
 	if b.err == nil {
+		if int(dlen) > b.buf.Len() {
+			return nil
+		}
 		data := make([]byte, dlen)
 		b.buf.Read(data)
 		return data
@@ -101,7 +104,9 @@ func (b *br) NextU32() (uint32, bool) {
 	if b.err != nil {
 		return 0, false
 	}
-
+	if int(n) > b.buf.Len() {
+		return 0, false
+	}
 	b.err = binary.Read(b.buf, binary.BigEndian, &n)
 	return n, b.err == nil
 }

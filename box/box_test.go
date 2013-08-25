@@ -1,8 +1,10 @@
 package box
 
 import "bytes"
+import "crypto/rand"
 import "fmt"
 import "io/ioutil"
+import "math/big"
 import "testing"
 
 var testMessages = []string{
@@ -72,6 +74,37 @@ var (
 		0x9d,
 	}
 )
+
+func randInt(max int64) int64 {
+	maxBig := big.NewInt(max)
+	n, err := rand.Int(PRNG, maxBig)
+	if err != nil {
+		return -1
+	}
+	return n.Int64()
+}
+
+func mutate(in []byte) (out []byte) {
+	out = make([]byte, len(in))
+	copy(out, in)
+
+	iterations := (randInt(int64(len(out))) / 2) + 1
+	if iterations == -1 {
+		panic("mutate failed")
+	}
+	for i := 0; i < int(iterations); i++ {
+		mByte := randInt(int64(len(out)))
+		mBit := randInt(7)
+		if mBit == -1 || mByte == -1 {
+			panic("mutate failed")
+		}
+		out[mByte] ^= (1 << uint(mBit))
+	}
+	if bytes.Equal(out, in) {
+		panic("mutate failed")
+	}
+	return out
+}
 
 /*
 func TestKeyGeneration(t *testing.T) {
@@ -144,6 +177,11 @@ func TestBadUnboxing(t *testing.T) {
 			fmt.Println("Unboxing should have failed: message", i)
 			t.FailNow()
 		}
+		_, ok = Open(mutate([]byte(testBoxes[i])), testGoodKey)
+		if ok {
+			fmt.Println("Unboxing should have failed: message", i)
+			t.FailNow()
+		}
 	}
 }
 
@@ -188,6 +226,12 @@ func TestSignedBadUnboxing(t *testing.T) {
 	for i := 0; i < len(testMessages); i++ {
 		_, ok := OpenAndVerify([]byte(testBoxes[i]), testPeerKey, testBadPub)
 		if ok {
+			fmt.Println("Unboxing should have failed: message", i)
+			t.FailNow()
+		} else if _, ok = OpenAndVerify(mutate([]byte(testBoxes[i])), testPeerKey, testGoodPub); ok {
+			fmt.Println("Unboxing should have failed: message", i)
+			t.FailNow()
+		} else if _, ok = OpenAndVerify(mutate([]byte(testBoxes[i])), testPeerKey, testGoodPub); ok {
 			fmt.Println("Unboxing should have failed: message", i)
 			t.FailNow()
 		}
@@ -235,6 +279,18 @@ func TestKeySigning(t *testing.T) {
 	}
 
 	ok = VerifySignedKey(testPeerPub, testBadPub, sig)
+	if ok {
+		fmt.Println("Key signature check should have failed.")
+		t.FailNow()
+	}
+
+	ok = VerifySignedKey(testPeerPub, mutate(testGoodPub), sig)
+	if ok {
+		fmt.Println("Key signature check should have failed.")
+		t.FailNow()
+	}
+
+	ok = VerifySignedKey(mutate(testPeerPub), testGoodPub, sig)
 	if ok {
 		fmt.Println("Key signature check should have failed.")
 		t.FailNow()
@@ -331,6 +387,7 @@ func BenchmarkKeyVerification(b *testing.B) {
 	}
 }
 
+/*
 func TestSharedKeyPairs(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		p_priv, p_pub, ok := GenerateKey()
@@ -344,6 +401,7 @@ func TestSharedKeyPairs(t *testing.T) {
 		ioutil.WriteFile(pubFN, p_pub, 0644)
 	}
 }
+*/
 
 var peerPublicList = []PublicKey{
 	PublicKey{
@@ -427,6 +485,10 @@ func TestSharedBoxing(t *testing.T) {
 			t.FailNow()
 		}
 		testBoxes[i] = string(box)
+		/*
+			fname := fmt.Sprintf("testvectors/test_shared_box_%d.bin", i)
+			ioutil.WriteFile(fname, []byte(testBoxes[i]), 0644)
+		*/
 	}
 }
 
@@ -451,6 +513,12 @@ func TestSharedUnboxing(t *testing.T) {
 				t.FailNow()
 			}
 		}
+		_, ok := OpenShared(mutate([]byte(testBoxes[i])),
+			peerPrivList[0], peerPublicList[0])
+		if ok {
+			fmt.Println("Unboxing should have failed: message", i)
+			t.FailNow()
+		}
 	}
 }
 
@@ -463,6 +531,10 @@ func TestSharedSignedBoxing(t *testing.T) {
 			t.FailNow()
 		}
 		testBoxes[i] = string(box)
+		/*
+			fname := fmt.Sprintf("testvectors/test_shared_signed_box_%d.bin", i)
+			ioutil.WriteFile(fname, []byte(testBoxes[i]), 0644)
+		*/
 	}
 }
 
@@ -495,6 +567,14 @@ func TestSharedSignedUnboxing(t *testing.T) {
 				fmt.Println("Signature verification should have failed!")
 				t.FailNow()
 			}
+		}
+		_, ok := OpenSharedAndVerify(mutate([]byte(testBoxes[i])),
+			peerPrivList[0],
+			peerPublicList[0],
+			testGoodPub)
+		if ok {
+			fmt.Println("Signature verification should have failed!")
+			t.FailNow()
 		}
 	}
 }
