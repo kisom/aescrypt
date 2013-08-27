@@ -30,6 +30,8 @@ import (
 const cryptKeySize = 32
 const tagKeySize = 48
 
+const VersionString = "2.0.0"
+
 // KeySize is the number of bytes a valid key should be.
 const KeySize = cryptKeySize + tagKeySize
 

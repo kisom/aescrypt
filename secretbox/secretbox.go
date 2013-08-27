@@ -29,7 +29,7 @@ import (
 const cryptKeySize = 16
 const tagKeySize = 32
 
-const VersionString = "1.0.0"
+const VersionString = "2.0.0"
 
 // KeySize is the number of bytes a valid key should be.
 const KeySize = cryptKeySize + tagKeySize
@@ -63,7 +63,6 @@ func generateNonce() (nonce, error) {
 
 	_, err := io.ReadFull(PRNG, n)
 	return n, err
-
 }
 
 func encrypt(key []byte, in []byte) (out []byte, err error) {
@@ -144,6 +143,8 @@ func Seal(message []byte, key Key) (box []byte, ok bool) {
 // bytes shorter than the box.
 func Open(box []byte, key Key) (message []byte, ok bool) {
 	if !KeyIsSuitable(key) {
+		return
+	} else if box == nil {
 		return
 	} else if len(box) <= Overhead {
 		return
