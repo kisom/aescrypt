@@ -3,6 +3,7 @@ package box
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"math/big"
 )
 
@@ -84,10 +85,13 @@ func (b *br) Next() []byte {
 	var dlen uint32
 	b.err = binary.Read(b.buf, binary.BigEndian, &dlen)
 	if b.err == nil {
+		fmt.Printf("dlen: %d\t\tbuflen: %d\n", int(dlen), b.buf.Len())
 		if int(dlen) > b.buf.Len() {
 			return nil
+		} else if int(dlen) <= 0 {
+			return nil
 		}
-		data := make([]byte, dlen)
+		data := make([]byte, int(dlen))
 		b.buf.Read(data)
 		return data
 	}

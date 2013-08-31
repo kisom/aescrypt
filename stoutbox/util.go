@@ -86,8 +86,10 @@ func (b *br) Next() []byte {
 	if b.err == nil {
 		if int(dlen) > b.buf.Len() {
 			return nil
+		} else if int(dlen) <= 0 {
+			return nil
 		}
-		data := make([]byte, dlen)
+		data := make([]byte, int(dlen))
 		b.buf.Read(data)
 		return data
 	}
