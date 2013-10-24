@@ -1,6 +1,6 @@
 cryptobox
 
-CryptoBox aims to provide similar functionality to NaCL[1], while using
+Cryptobox aims to provide similar functionality to NaCL[1], while using
 FIPS ciphers. It provides the following packages:
 
 * box: secure and authenticate small messages with 20-year security
@@ -32,5 +32,6 @@ file for details.
 
 See also:
 
-The CryptoBox project: http://cryptobox.tyrfingr.is/. This site contains
-the specification, including test vectors.
+The Cryptobox project: http://cryptobox.tyrfingr.is/. This site contains
+the specification, including test vectors, and a guidebook for building
+secure systems using Cryptobox.
