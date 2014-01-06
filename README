@@ -1,6 +1,3 @@
-NOTE: this repository has moved to https://github.com/cryptobox/gocryptobox;
-updates to the package will go there.
-
 cryptobox
 
 Cryptobox aims to provide similar functionality to NaCL[1], while using
