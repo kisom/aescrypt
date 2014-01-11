@@ -79,7 +79,7 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	if x == nil {
 		return nil, false
 	}
-	xb := zeroPad(x.Bytes(), SharedKeySize)
+	xb := sha256.Sum256(zeroPad(x.Bytes(), SharedKeySize))
 
 	skey := xb[:16]
 	mkey := xb[16:]

@@ -78,7 +78,7 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	if x == nil {
 		return nil, false
 	}
-	xb := x.Bytes()
+	xb := sha512.Sum512(x.Bytes())
 
 	skey := xb[:32]
 	mkey := xb[32:]
