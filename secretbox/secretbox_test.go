@@ -148,6 +148,23 @@ func TestUnboxing(t *testing.T) {
 	}
 }
 
+// TestEmptyBox validates the behaviour of an empty box.
+func TestEmptyBox(t *testing.T) {
+	var msg = []byte{}
+
+	box, ok := Seal(msg, testGoodKey)
+	if !ok {
+		t.Fatal("secretbox: failed to seal message")
+	}
+
+	out, ok := Open(box, testGoodKey)
+	if !ok {
+		t.Fatal("secretbox: failed to open message")
+	} else if !bytes.Equal(out, msg) {
+		t.Fatal("secretbox: output message doesn't match original")
+	}
+}
+
 // TestUnboxingFails ensures that attempting to retrieve a message from
 // a box with the wrong key will fail.
 func TestUnboxingFails(t *testing.T) {

@@ -146,7 +146,7 @@ func Seal(message []byte, key Key) (box []byte, ok bool) {
 func Open(box []byte, key Key) (message []byte, ok bool) {
 	if !KeyIsSuitable(key) {
 		return
-	} else if len(box) <= Overhead {
+	} else if len(box) < Overhead {
 		return
 	}
 
