@@ -27,7 +27,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha512"
-	"github.com/cryptobox/gocryptobox/strongbox"
+	"github.com/kisom/aescrypt/strongbox"
 	"math/big"
 )
 
