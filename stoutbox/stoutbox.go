@@ -73,7 +73,10 @@ func ecdh(key PrivateKey, peer PublicKey) ([]byte, bool) {
 	x, y := elliptic.Unmarshal(curve, peer)
 	if x == nil {
 		return nil, false
+	} else if !curve.IsOnCurve(x, y) {
+		return nil, false
 	}
+
 	x, _ = curve.ScalarMult(x, y, key)
 	if x == nil {
 		return nil, false
